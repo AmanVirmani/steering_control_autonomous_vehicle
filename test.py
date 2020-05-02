@@ -3,26 +3,19 @@ import numpy as np
 
 
 # function to generate map
-def createMap():
-
-    # creating empty world
-    world = np.ones((400, 400, 3))
+def createMap(world, scale=40):
 
     # scaling up world
-    height = world.shape[0]/40
-    width = world.shape[1]/40
-    world.reshape((int(width), int(height)))
-
-    cv2.imshow('world', world)
+    height = world.shape[0]*scale
+    width = world.shape[1]*scale
+    world = cv2.resize(world, (width, height))
 
     # get random obstacles
     for _ in range(10):
-        a = np.random.randint(10, size=2)
-        world[a[0], a[1]] = (0, 0, 0)
-
-    # set start point and goal point
-    world[0, 0] = (0, 255, 0)
-    world[9, 9] = (0, 0, 255)
+        obs_coord = np.random.randint(10, size=2)
+        world = cv2.rectangle(world, (obs_coord[0]*scale, obs_coord[1]*scale),
+                              (obs_coord[0]*scale + scale, obs_coord[1]*scale + scale), (0, 0, 0), -1)
+        #cv2.re
 
     # display world
     cv2.imshow('world', world)
@@ -31,4 +24,8 @@ def createMap():
 
 # main function
 if __name__ == '__main__':
-    createMap()
+
+    # creating empty world
+    w = np.ones((10, 10, 3))
+
+    createMap(w, scale=40)
