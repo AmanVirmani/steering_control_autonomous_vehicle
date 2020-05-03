@@ -1,11 +1,15 @@
 import gym
 import numpy as np
 import time, pickle, os
+from utils import env
+import random
 
-env = gym.make('FrozenLake-v0', is_slippery=False)
+
+env = env.Map()
+
 
 class Qlearning:
-    def __init__(self, Q, total_episodes, max_steps, epsilon = 0.9, alpha = 0.81, gamma = 0.96):
+    def __init__(self, Q, total_episodes, max_steps, epsilon=0.9, alpha=0.81, gamma=0.96):
         self.total_episodes = total_episodes
         self.max_steps = max_steps
         self.Q = Q
@@ -14,17 +18,17 @@ class Qlearning:
         self.gamma = gamma
 
     def choose_action(self,state):
-        action=0
+        action = 0
         if np.random.uniform(0, 1) < self.epsilon:
-            action = env.action_space.sample()
+            action = random.sample(env.action_set, 1)
         else:
             action = np.argmax(self.Q[state, :])
         return action
 
     def learn(self, state, state2, reward, action):
         predict = self.Q[state, action]
-        target = reward + gamma * np.max(Q[state2, :])
-        Q[state, action] = Q[state, action] + lr_rate * (target - predict)
+        target = reward + self.gamma * np.max(self.Q[state2, :])
+        self.Q[state, action] = self.Q[state, action] + self.alpha * (target - predict)
 
     def train(self):
         for episode in range(self.total_episodes):
@@ -33,11 +37,11 @@ class Qlearning:
             t = 0
 
             while t < self.max_steps:
-                # env.render()
+                #env.render()
 
                 action = self.choose_action(state)
 
-                state2, reward, done, info = env.step(action)
+                state2, reward, done = env.move_robot(action)
 
                 self.learn(state, state2, reward, action)
 
@@ -50,19 +54,44 @@ class Qlearning:
 
                 time.sleep(0.1)
 
+    def choose_action(self, state):
+        action = np.argmax(self.Q[state, :])
+        return action
+
+    def planPath(self):
+        state = env.reset()
+        t = 0
+        done = False
+        while True:
+            env.render()
+
+            action = self.choose_action(state)
+
+            state2, reward, done = env.move_robot(action)
+
+            state = state2
+
+            if reward == 1:
+                env.render()
+                print("Success!!!!!!")
+                time.sleep(3)
+                break
+            else:
+                env.render()
+                print("Fell into the Hole:(")
+                time.sleep(3)
+                break
+
+            time.sleep(0.5)
+            os.system('clear')
+
 
 if __name__=="__main__":
-    epsilon = 0.9
     total_episodes = 100
     max_steps = 100
 
-    lr_rate = 0.81
-    gamma = 0.96
-
-    Q = np.zeros((env.observation_space.n, env.action_space.n))
+    with open('../Qtable/frozenLake_qTable_final.pkl', 'rb') as f:
+        Q = pickle.load(f)
     agent = Qlearning(Q, total_episodes, max_steps)
-    agent.train()
-    print(Q)
-
-#with open(path + "frozenLake_qTable.pkl", 'wb') as f:
-#    pickle.dump(Q, f)
+    agent.planPath()
+    #print(Q)
