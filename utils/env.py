@@ -8,18 +8,18 @@ class Map:
         self.height = height
         self.scale = scale
         self.start = (0,0)
-        self.goat = (9,9)
-        self.curr_loc = self.get_current_loc()
+        self.goal = (9,9)
         self.action_set = [0, 1, 2, 4]
         self.map = self.create_map()
+        self.curr_loc = self.get_current_loc()
 
     def create_map(self):
         #map = np.zeros(self.width, self.height)
         return np.load('world.npy')
 
-    def render(self, curr_loc):
+    def render(self):
         # create curr_loc point
-        world = cv2.rectangle(self.map, (curr_loc[0]*self.scale, curr_loc[1]*self.scale), ((curr_loc[0]+1) * self.scale, (curr_loc[1]+1) * self.scale), (0, 0, 255), -1)
+        world = cv2.rectangle(self.map, (self.curr_loc[0]*self.scale, self.curr_loc[1]*self.scale), (self.curr_loc[0]+1 * self.scale, self.curr_loc[1]+1 * self.scale), (0, 0, 255), -1)
 
         # display world
         world = cv2.flip(world, -1)
@@ -30,25 +30,39 @@ class Map:
         if not self.is_valid_action(action):
             return None
         # free space is 1
-        self.map[self.curr_loc[0]][self.curr_loc[1]] == 1
+        curr_loc = self.curr_loc
+        #self.map[self.curr_loc[0]][self.curr_loc[1]] = 1
         # left
         if action == 0:
-            self.curr_loc[1] -= 1
+            curr_loc[1] -= 1
         # down
         elif action == 1:
-            self.curr_loc[0] += 1
+            curr_loc[0] += 1
         # right
         elif action == 2:
-            self.curr_loc[1] += 1
+            curr_loc[1] += 1
         # up
         elif action == 3:
-            self.curr_loc[0] -= 1
+            curr_loc[0] -= 1
 
         # robot location is 2
-        self.map[self.curr_loc[0]][self.curr_loc[1]] == 2
+        if curr_loc == self.goal:
+            reward = 1
+        elif self.map[curr_loc[0]][curr_loc[1]] == 0:
+            reward = -1
+            curr_loc = self.curr_loc
+        else:
+            reward = 0
+
+        self.curr_loc = curr_loc
+        state = self.curr_loc[0] * self.height + self.curr_loc[1]
+        return state, reward, abs(reward)
+
+
 
     def get_current_loc(self):
-        loc = np.where(self.map == np.amax(self.map))
+        #loc = np.where(self.map == np.amax(self.map))
+        loc = np.unravel_index(self.map.argmax(),self.map.shape)
         return loc
 
     def is_valid_action(self, action):
