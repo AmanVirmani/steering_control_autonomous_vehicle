@@ -17,12 +17,20 @@ class Qlearning:
         self.alpha = alpha
         self.gamma = gamma
 
-    def choose_action(self,state):
+    def choose_action(self, state):
         action = 0
+        valid_action_set = []
+        for action in env.action_set:
+            if env.is_valid_action(action):
+                valid_action_set.append(action)
+
         if np.random.uniform(0, 1) < self.epsilon:
-            action = random.sample(env.action_set, 1)
+            action = random.sample(valid_action_set, 1)
         else:
-            action = np.argmax(self.Q[state, :])
+            max = 0
+            for action in env.action_set:
+                if env.is_valid_action(action) and self.Q[state, action] > max:
+                    action = self.Q[state, action]
         return action
 
     def learn(self, state, state2, reward, action):
@@ -33,7 +41,8 @@ class Qlearning:
     def train(self):
         for episode in range(self.total_episodes):
             print('Episodes', episode)
-            state = env.reset()
+            env.reset()
+            state = self.get_current_state()
             t = 0
 
             while t < self.max_steps:
@@ -54,16 +63,22 @@ class Qlearning:
 
                 time.sleep(0.1)
 
-    def choose_action(self, state):
-        action = np.argmax(self.Q[state, :])
-        return action
+    def get_current_state(self):
+        height, width = env.map.shape
+        state = env.curr_loc[0]*width + env.curr_loc[1]
+        return state
+
+    #def choose_action(self, state):
+    #    action = np.argmax(self.Q[state, :])
+    #    return action
 
     def planPath(self):
-        state = env.reset()
+        env.reset()
+        state = self.get_current_state()
         t = 0
         done = False
         while True:
-            env.render()
+            #env.render()
 
             action = self.choose_action(state)
 
@@ -72,12 +87,12 @@ class Qlearning:
             state = state2
 
             if reward == 1:
-                env.render()
+                #env.render()
                 print("Success!!!!!!")
                 time.sleep(3)
                 break
             else:
-                env.render()
+                #env.render()
                 print("Fell into the Hole:(")
                 time.sleep(3)
                 break
@@ -90,8 +105,10 @@ if __name__=="__main__":
     total_episodes = 100
     max_steps = 100
 
-    with open('../Qtable/frozenLake_qTable_final.pkl', 'rb') as f:
-        Q = pickle.load(f)
-    agent = Qlearning(Q, total_episodes, max_steps)
+    #with open('../Qtable/frozenLake_qTable_final.pkl', 'rb') as f:
+    #    Q = pickle.load(f)
+    Q = np.zeros((100,4))
+    agent = Qlearning(Q, total_episodes, max_steps, epsilon=2)
+    agent.train()
     agent.planPath()
     #print(Q)
