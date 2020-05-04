@@ -9,17 +9,35 @@ class Map:
         self.scale = scale
         self.start = (0,0)
         self.goal = (9,9)
-        self.action_set = [0, 1, 2, 4]
+        self.action_set = [0, 1, 2, 3]
         self.map = self.create_map()
         self.curr_loc = self.get_current_loc()
 
     def create_map(self):
-        #map = np.zeros(self.width, self.height)
-        return np.load('world.npy')
+        world = np.load('world.npy')
+        # start location
+        world[0][0] = 2
+        # goal location
+        world[-1][-1] = 1
+        return world
 
-    def render(self):
+    def render(self, scale=40):
+        # scaling up world
+        height = self.map.shape[0]*scale
+        width = self.map.shape[1]*scale
+        world = np.full((height, width, 3), fill_value=255)  # cv2.resize(self.map, (width, height))
+
+        for row in range(len(self.map)):
+            for col in range(len(self.map[0])):
+                if self.map[row][col] == 0:
+                    world = cv2.rectangle(world, (0, 0), (10, 10), (0, 0, 0), -1)
+                    #world = cv2.rectangle(world, (col * scale, row * scale), ((col + 1 )* scale, (row + 1) * scale), (0, 0, 0), -1)
+
         # create curr_loc point
-        world = cv2.rectangle(self.map, (self.curr_loc[0]*self.scale, self.curr_loc[1]*self.scale), (self.curr_loc[0]+1 * self.scale, self.curr_loc[1]+1 * self.scale), (0, 0, 255), -1)
+        world = cv2.rectangle(world, (self.curr_loc[0]*self.scale, self.curr_loc[1]*self.scale), (self.curr_loc[0]+1 * self.scale, self.curr_loc[1]+1 * self.scale), (0, 255, 0), -1)
+
+        # create goal point
+        world = cv2.rectangle(world, (self.goal[0]*self.scale, self.goal[1]*self.scale), (self.goal[0]+1 * self.scale, self.goal[1]+1 * self.scale), (0, 0, 255), -1)
 
         # display world
         world = cv2.flip(world, -1)
@@ -55,14 +73,13 @@ class Map:
             reward = 0
 
         self.curr_loc = curr_loc
-        state = self.curr_loc[0] * self.height + self.curr_loc[1]
+        state = self.curr_loc[0] * self.width + self.curr_loc[1]
         return state, reward, abs(reward)
 
 
 
     def get_current_loc(self):
-        #loc = np.where(self.map == np.amax(self.map))
-        loc = np.unravel_index(self.map.argmax(),self.map.shape)
+        loc = np.unravel_index(self.map.argmax(), self.map.shape)
         return loc
 
     def is_valid_action(self, action):
