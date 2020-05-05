@@ -3,7 +3,7 @@ import numpy as np
 import time, pickle, os
 from utils import env
 import random
-
+import cv2
 
 env = env.Map()
 
@@ -27,10 +27,12 @@ class Qlearning:
         if np.random.uniform(0, 1) < self.epsilon:
             action = random.sample(valid_action_set, 1)[0]
         else:
-            max = 0
-            for action in env.action_set:
-                if env.is_valid_action(action) and self.Q[state, action] > max:
-                    action = self.Q[state, action]
+            return np.argmax(Q[state,:])
+            #action_set = self.Q[state, :]
+            #action_set.sort()
+            #for index in range(len(action_set)):
+            #    if env.is_valid_action(index):
+            #        return index
         return action
 
     def learn(self, state, state2, reward, action):
@@ -90,11 +92,13 @@ class Qlearning:
             if reward == 1:
                 env.render()
                 print("Success!!!!!!")
+                cv2.waitKey(0)
                 time.sleep(3)
                 break
-            else:
+            elif reward == -1:
                 env.render()
                 print("Fell into the Hole:(")
+                cv2.waitKey(0)
                 time.sleep(3)
                 break
 
@@ -108,8 +112,9 @@ if __name__=="__main__":
 
     #with open('../Qtable/frozenLake_qTable_final.pkl', 'rb') as f:
     #    Q = pickle.load(f)
-    Q = np.zeros((100, 4))
+    #Q = np.zeros((100, 4))
+    Q = np.load('../Qtable/Qtable.npy')
     agent = Qlearning(Q, total_episodes, max_steps, epsilon=0)
-    agent.train()
+    #agent.train()
     agent.planPath()
     #print(Q)
