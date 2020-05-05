@@ -25,7 +25,7 @@ class Qlearning:
                 valid_action_set.append(action)
 
         if np.random.uniform(0, 1) < self.epsilon:
-            action = random.sample(valid_action_set, 1)
+            action = random.sample(valid_action_set, 1)[0]
         else:
             max = 0
             for action in env.action_set:
@@ -46,7 +46,7 @@ class Qlearning:
             t = 0
 
             while t < self.max_steps:
-                #env.render()
+                env.render()
 
                 action = self.choose_action(state)
 
@@ -59,6 +59,7 @@ class Qlearning:
                 t += 1
 
                 if done:
+                    env.render()
                     break
 
                 time.sleep(0.1)
@@ -78,7 +79,7 @@ class Qlearning:
         t = 0
         done = False
         while True:
-            #env.render()
+            env.render()
 
             action = self.choose_action(state)
 
@@ -87,12 +88,12 @@ class Qlearning:
             state = state2
 
             if reward == 1:
-                #env.render()
+                env.render()
                 print("Success!!!!!!")
                 time.sleep(3)
                 break
             else:
-                #env.render()
+                env.render()
                 print("Fell into the Hole:(")
                 time.sleep(3)
                 break
@@ -103,12 +104,12 @@ class Qlearning:
 
 if __name__=="__main__":
     total_episodes = 100
-    max_steps = 100
+    max_steps = 10000
 
     #with open('../Qtable/frozenLake_qTable_final.pkl', 'rb') as f:
     #    Q = pickle.load(f)
-    Q = np.zeros((100,4))
-    agent = Qlearning(Q, total_episodes, max_steps, epsilon=2)
+    Q = np.zeros((100, 4))
+    agent = Qlearning(Q, total_episodes, max_steps, epsilon=0)
     agent.train()
     agent.planPath()
     #print(Q)
