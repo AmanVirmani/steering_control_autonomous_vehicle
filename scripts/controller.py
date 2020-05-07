@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
-# import rospy
-from utils import *
+import rospy
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 import rospkg
@@ -12,7 +11,7 @@ import numpy as np
 # global param, err
 
 # waypoints
-waypoints = []  # [(-4, -4), (-4, -3), (-3, -2), (-2,0), (-1,2), (1,2), (3,-1)]
+waypoints = []
 way_n = 0
 
 # PID parameters
@@ -24,21 +23,12 @@ err = [0, 0]
 
 # function to get Cross-Track Error
 def getCTE(current_pose):
-    # global current_pose, cte_
-    # current_pose = current_pose_
 
     # coordinates of start point
-    start_pose = [waypoints[way_n].x, waypoints[way_n].y]
-    # print('start_pose	', start_pose)
+    start_pose = waypoints[way_n]
 
     # coordinates of goal point
-    goal_pose = [waypoints[way_n + 1].x, waypoints[way_n + 1].y]
-    # print('goal_pose'	, goal_pose)
-
-    # cross-track error
-    # cte = (((current_pose[1] - start_pose[1]) * (goal_pose[0] - start_pose[0])) -
-    #        ((current_pose[0] - start_pose[0]) * (goal_pose[1] - start_pose[1]))) / \
-    #       (((goal_pose[0] - start_pose[0]) ** 2) + ((goal_pose[1] - start_pose[1]) ** 2))
+    goal_pose = waypoints[way_n + 1]
 
     # percentage path covered b/w waypoints
     distance = (((current_pose[0] - start_pose[0]) * (goal_pose[0] - start_pose[0])) +
@@ -48,6 +38,7 @@ def getCTE(current_pose):
     return distance
 
 
+# function to convert quaternion to euler
 def quaternion_to_euler(x, y, z, w):
     t0 = +2.0 * (w * x + y * z)
     t1 = +1.0 - 2.0 * (x * x + y * y)
@@ -68,8 +59,9 @@ def quaternion_to_euler(x, y, z, w):
     return yaw
 
 
-def yawE(x, y, t, omega):
-    goal = [waypoints[way_n + 1].x, waypoints[way_n + 1].y]
+# function to get omega angle
+def yawE(x, y, t):
+    goal = waypoints[way_n + 1]
 
     direction = math.atan2(goal[1] - y, goal[0] - x + 0.001)
 
@@ -114,14 +106,13 @@ def callback_odom(odom):
     yaw = quaternion_to_euler(odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, \
                               odom.pose.pose.orientation.z, odom.pose.pose.orientation.w)
 
-    error = yawE(odom.pose.pose.position.x, odom.pose.pose.position.y, yaw, odom.twist.twist.angular.z)
+    error = yawE(odom.pose.pose.position.x, odom.pose.pose.position.y, yaw  )
 
     if dist > 1:
         # update waypoints
         way_n += 1
-        print('Current Waypoint id: ', way_n)
-        ## Get new path
-        ## global waypoints = [new_points]
+        print('Way-point: ', way_n)
+
         if way_n >= len(waypoints) - 1:
             print("GOAL REACHED")
             msg.angular.z = 0
@@ -139,9 +130,32 @@ def callback_odom(odom):
     pub.publish(msg)
 
 
+# function to convert waypoints into meaning
+def convertor(wayp, size=10):
+    cord_wayp = []
+    yaw_angle = []
+
+    # getting x, y location
+    for i in range(len(wayp)):
+        x = - (wayp[i][0] % size + 0.5)
+        y = (wayp[i][0] / size + 0.5)
+        cord_wayp.append((x, y))
+
+        angle = wayp[i][1] * 1.57
+        yaw_angle.append(angle)
+
+    return cord_wayp, yaw_angle
+
+
 # main function
 if __name__ == '__main__':
-    waypoints = np.load('Qtable/waypoints.npy')
+    # load state_action pair
+    ros_root = rospkg.RosPack()
+    state_action = np.load(ros_root.get_path('steering_control_autonomous_vehicle') + '/Qtable/waypoints.npy')
+
+    # get coordinates and angles
+    waypoints, angles = convertor(state_action)
+
     # initialize node
     rospy.init_node('controller', anonymous=True)
 
