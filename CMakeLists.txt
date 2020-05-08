@@ -27,6 +27,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS})
 
 install(PROGRAMS
-  scripts/
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ scripts/controller.py
+ DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
