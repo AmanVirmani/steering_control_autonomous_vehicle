@@ -64,7 +64,6 @@ class Qlearning:
                     env.render()
                     break
 
-                time.sleep(0.1)
 
     def get_current_state(self):
         height, width = env.map.shape
@@ -80,10 +79,12 @@ class Qlearning:
         state = self.get_current_state()
         t = 0
         done = False
+        waypoints = []
         while True:
             env.render()
 
             action = self.choose_action(state)
+            waypoints.append((state,action))
 
             state2, reward, done = env.move_robot(action)
 
@@ -104,6 +105,7 @@ class Qlearning:
 
             time.sleep(0.5)
             os.system('clear')
+        return waypoints
 
 
 if __name__=="__main__":
@@ -116,5 +118,6 @@ if __name__=="__main__":
     Q = np.load('../Qtable/Qtable.npy')
     agent = Qlearning(Q, total_episodes, max_steps, epsilon=0)
     #agent.train()
-    agent.planPath()
+    waypoints = agent.planPath()
+    np.save('../waypoints.npy', waypoints)
     #print(Q)
