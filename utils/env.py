@@ -45,11 +45,11 @@ class Map:
                 if self.map[row][col] == 0:
                     world = cv2.rectangle(world, (col * self.scale, row * self.scale), ((col + 1 )* self.scale, (row + 1) * self.scale), black, -1)
 
-        # create curr_loc point
-        world = cv2.rectangle(world, (self.curr_loc[1]*self.scale, self.curr_loc[0]*self.scale), ((self.curr_loc[1]+1) * self.scale, (self.curr_loc[0]+1) * self.scale), green, -1)
-
         # create goal point
         world = cv2.rectangle(world, (self.goal[1]*self.scale, self.goal[0]*self.scale), ((self.goal[1]+1) * self.scale, (self.goal[0]+1) * self.scale), red, -1)
+
+        # create curr_loc point
+        world = cv2.rectangle(world, (self.curr_loc[1]*self.scale, self.curr_loc[0]*self.scale), ((self.curr_loc[1]+1) * self.scale, (self.curr_loc[0]+1) * self.scale), green, -1)
 
         # display world
         #world = cv2.flip(world, -1)
