@@ -106,7 +106,7 @@ def callback_odom(odom):
     yaw = quaternion_to_euler(odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, \
                               odom.pose.pose.orientation.z, odom.pose.pose.orientation.w)
 
-    error = yawE(odom.pose.pose.position.x, odom.pose.pose.position.y, yaw  )
+    error = yawE(odom.pose.pose.position.x, odom.pose.pose.position.y, yaw)
 
     if dist > 1:
         # update waypoints
@@ -143,6 +143,8 @@ def convertor(wayp, size=10):
 
         angle = wayp[i][1] * 1.57
         yaw_angle.append(angle)
+
+    cord_wayp.append((-9.5, 9.5))
 
     return cord_wayp, yaw_angle
 
