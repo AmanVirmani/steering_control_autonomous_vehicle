@@ -80,7 +80,6 @@ class DQN:
             env.reset()
             state = self.get_current_state()
             t = 0
-
             while t < self.max_steps:
                 #env.render()
 
@@ -111,6 +110,9 @@ class DQN:
         return state
 
     def planPath(self):
+        #self.model.load_weights('../Qtable/model_default.ckpt')
+        self.model.load_weights('./model_default.ckpt')
+        self.epsilon = 0
         env.reset()
         state = self.get_current_state()
         t = 0
@@ -120,9 +122,12 @@ class DQN:
             env.render()
 
             action = self.choose_action(state)
-            waypoints.append((state,action))
+            waypoints.append((state, action))
 
             state2, reward, done = env.move_robot(action)
+            if state2 is None:
+                print('Invalid Action')
+                continue
 
             state = state2
 
@@ -147,5 +152,7 @@ class DQN:
 if __name__=="__main__":
     n_states = 100
     n_actions = 4
-    agent = DQN(state_size=n_states, action_size=n_actions)
-    agent.train()
+    agent = DQN(state_size=n_states, action_size=n_actions, total_episodes=11, max_steps=10000)
+    #agent.train()
+    #agent.planPath()
+    #cv2.destroyAllwindows()
