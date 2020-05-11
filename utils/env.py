@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import random
 
 
 class Map:
@@ -13,12 +14,64 @@ class Map:
         self.curr_loc = None
         self.map = self.create_map()
         self.curr_loc = self.get_current_loc()
+        self.obstacle = []
 
     #def current_map(self):
     #    if self.curr_loc is not None:
     #        state = self.curr_loc[0] * self.width + self.curr_loc[1]
     #
 
+    def is_validObstacle_action(self, center, action):
+        valid = True
+        # left
+        if action == 0 and (center[1] - 1 < 0 or not self.map[center[0]][center[1] - 1]):
+            valid = False
+        # down
+        elif action == 1 and (
+                center[0] + 1 >= self.height or not self.map[center[0] + 1][center[1]]):
+            valid = False
+        # right
+        elif action == 2 and (
+                center[1] + 1 >= self.width or not self.map[center[0]][center[1] + 1]):
+            valid = False
+        # up
+        elif action == 3 and (center[0] - 1 < 0 or not self.map[center[0] - 1][center[1]]):
+            valid = False
+        return valid
+
+    def updateObstaclePosition(self, center, action):
+
+        if not self.is_validObstacle_action(center, action):
+            return center, action
+
+        # left
+        if action == 0:
+            center[1] -= 1
+        # down
+        elif action == 1:
+            center[0] += 1
+        # right
+        elif action == 2:
+            center[1] += 1
+        # up
+        elif action == 3:
+            center[0] -= 1
+        return center, action
+
+    def moveObstacles(self):
+        for _ in range(3):
+            center = self.obstacle.pop(0)
+            self.map[center] = 1
+
+            action = random.randint(0, 4)
+            new_center, new_action = self.updateObstaclePosition(center, action)
+
+            while new_center in self.obstacle:
+                action = random.randint(0, 4)
+                new_center, new_action = self.updateObstaclePosition(center, action)
+
+            self.obstacle.append(new_center)
+            self.map[new_center] = 0
 
     def create_map(self):
         world = np.load('world.npy')
@@ -28,6 +81,13 @@ class Map:
             world[self.curr_loc[0]][self.curr_loc[1]] = 2
         # goal location
         world[-1][-1] = 1
+
+        # get all the obstacle coordinates
+        for row in range(len(self.map)):
+            for col in range(len(self.map[0])):
+                if self.map[row][col] == 0:
+                    self.obstacle.append((row, col))
+
         return world
 
     def render(self):
@@ -52,7 +112,7 @@ class Map:
         world = cv2.rectangle(world, (self.curr_loc[1]*self.scale, self.curr_loc[0]*self.scale), ((self.curr_loc[1]+1) * self.scale, (self.curr_loc[0]+1) * self.scale), green, -1)
 
         # display world
-        #world = cv2.flip(world, -1)
+        # world = cv2.flip(world, -1)
         cv2.imshow('world', world)
         cv2.waitKey(1)
 
@@ -60,8 +120,9 @@ class Map:
         if not self.is_valid_action(action):
             return None, 0, 0
         # free space is 1
+        self.moveObstacles()
         curr_loc = np.copy(self.curr_loc)
-        #self.map[self.curr_loc[0]][self.curr_loc[1]] = 1
+        # self.map[self.curr_loc[0]][self.curr_loc[1]] = 1
         # left
         if action == 0:
             curr_loc[1] -= 1
