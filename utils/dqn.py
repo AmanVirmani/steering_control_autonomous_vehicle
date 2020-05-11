@@ -9,7 +9,7 @@ from keras.layers import Dense
 from keras.optimizers import Adam
 from collections import deque
 
-env = env.Map()
+env = env.Map('./world_new.npy')
 
 
 class DQN:
@@ -90,7 +90,7 @@ class DQN:
             state = self.get_current_state()
             t = 0
             while t < self.max_steps:
-                #env.render()
+                env.render()
 
                 action = self.choose_action(state)
 
@@ -106,7 +106,7 @@ class DQN:
 
                 if done:
                     success += 1
-                    #env.render()
+                    env.render()
                     break
                 if len(self.memory) > batch_size:
                     self.replay(batch_size)
