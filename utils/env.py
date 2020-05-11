@@ -58,7 +58,7 @@ class Map:
 
     def move_robot(self, action):
         if not self.is_valid_action(action):
-            return None
+            return None, 0, 0
         # free space is 1
         curr_loc = np.copy(self.curr_loc)
         #self.map[self.curr_loc[0]][self.curr_loc[1]] = 1
