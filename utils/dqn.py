@@ -84,6 +84,7 @@ class DQN:
         return np.reshape(qtable, (self.state_size, self.action_size))
 
     def train(self, batch_size = 32):
+        success = 0
         for episode in range(self.total_episodes):
             print('Episodes', episode)
             env.reset()
@@ -105,7 +106,8 @@ class DQN:
                 t += 1
 
                 if done:
-                    env.render()
+                    success += 1
+                    #env.render()
                     break
                 if len(self.memory) > batch_size:
                     self.replay(batch_size)
