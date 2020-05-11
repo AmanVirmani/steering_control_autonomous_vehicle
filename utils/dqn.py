@@ -31,7 +31,8 @@ class DQN:
         model = Sequential()
         model.add(Dense(24, input_dim=self.state_size,  activation='relu'))
         model.add(Dense(24, activation='relu'))
-        model.add(Dense(self.action_size, activation='linear'))
+        model.add(Dense(self.action_size, activation='softmax'))
+        #model.add(Dense(self.action_size, activation='linear'))
         model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
         return model
 
@@ -152,7 +153,7 @@ class DQN:
 if __name__=="__main__":
     n_states = 100
     n_actions = 4
-    agent = DQN(state_size=n_states, action_size=n_actions, total_episodes=11, max_steps=10000)
-    #agent.train()
-    #agent.planPath()
+    agent = DQN(state_size=n_states, action_size=n_actions, total_episodes=101, max_steps=10000)
+    agent.train()
+    agent.planPath()
     #cv2.destroyAllwindows()
