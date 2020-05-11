@@ -82,12 +82,12 @@ class Map:
             reward = -1
             curr_loc = self.curr_loc
         else:
-             reward = 0
+             reward = -0.01
 
         self.curr_loc = curr_loc
         self.map = self.create_map()
         state = self.curr_loc[0] * self.width + self.curr_loc[1]
-        return state, reward, abs(reward)
+        return state, reward, abs(reward)==1
 
     def get_current_loc(self):
         loc = np.unravel_index(self.map.argmax(), self.map.shape)
