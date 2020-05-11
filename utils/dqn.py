@@ -1,6 +1,5 @@
-import gym
 import numpy as np
-import time, pickle, os
+import time , os
 from utils import env
 import random
 import cv2
