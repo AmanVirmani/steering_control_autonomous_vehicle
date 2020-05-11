@@ -75,6 +75,14 @@ class DQN:
     def save(self, name):
         self.model.save_weights(name)
 
+    def get_qtable(self):
+        qtable = []
+        for state in range(self.state_size):
+            state_input = np.zeros((1, 100))
+            state_input[0][state] = 1
+            qtable.append(self.model.predict(state_input))
+        return np.reshape(qtable, (self.state_size, self.action_size))
+
     def train(self, batch_size = 32):
         for episode in range(self.total_episodes):
             print('Episodes', episode)
