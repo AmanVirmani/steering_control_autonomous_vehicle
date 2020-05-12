@@ -175,3 +175,4 @@ class Map:
     def reset(self):
         self.curr_loc = [0,0]
         self.map = self.create_map()
+        self.obstacle = self.get_obstacle_location()
