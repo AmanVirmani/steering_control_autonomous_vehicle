@@ -1,6 +1,5 @@
-import gym
 import numpy as np
-import time, pickle, os
+import time , os
 from utils import env
 import random
 import cv2
@@ -10,7 +9,7 @@ from keras.layers import Dense
 from keras.optimizers import Adam
 from collections import deque
 
-env = env.Map()
+env = env.Map('./world_new.npy')
 
 
 class DQN:
@@ -19,9 +18,9 @@ class DQN:
         self.action_size = action_size
         self.memory = deque(maxlen=2000)
         self.gamma = 0.95
-        self.epsilon = 1.0
+        self.epsilon = 0.9
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 1  # 0.995
         self.learning_rate = 0.001
         self.model = self._build_model()
         self.total_episodes = total_episodes
@@ -31,7 +30,7 @@ class DQN:
         model = Sequential()
         model.add(Dense(24, input_dim=self.state_size,  activation='relu'))
         model.add(Dense(24, activation='relu'))
-        model.add(Dense(self.action_size, activation='linear'))
+        model.add(Dense(self.action_size, activation='softmax'))
         model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
         return model
 
@@ -51,17 +50,22 @@ class DQN:
         act_values = self.model.predict(state_input)
         return np.argmax(act_values[0])
 
+    def convert_state_to_nn_input(self, state):
+        state_input = np.zeros((1, 100))
+        state_input[0][state] = 1
+        for loc in env.obstacle:
+            state_input[0][loc[0]*env.width + loc[1]] = -1
+        return state_input
+
     def replay(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
         for state, action, reward, next_state, done in minibatch:
             target = reward
             if not done:
-                next_state_input = np.zeros((1, 100))
-                next_state_input[0][next_state] = 1
+                next_state_input = self.convert_state_to_nn_input(next_state)
                 target = (reward + self.gamma *
                           np.amax(self.model.predict(next_state_input)[0]))
-            state_input = np.zeros((1, 100))
-            state_input[0][state] = 1
+            state_input = self.convert_state_to_nn_input(state)
             target_f = self.model.predict(state_input)
             target_f[0][action] = target
             self.model.fit(state_input, target_f, epochs=1, verbose=0)
@@ -74,7 +78,16 @@ class DQN:
     def save(self, name):
         self.model.save_weights(name)
 
-    def train(self, batch_size = 32):
+    def get_qtable(self):
+        qtable = []
+        for state in range(self.state_size):
+            state_input = self.convert_state_to_nn_input(state)
+            qtable.append(self.model.predict(state_input))
+        return np.reshape(qtable, (self.state_size, self.action_size))
+
+    def train(self, batch_size=32):
+        self.model.load_weights('./model_default.ckpt')
+        success, loss = 0, 0
         for episode in range(self.total_episodes):
             print('Episodes', episode)
             env.reset()
@@ -96,12 +109,18 @@ class DQN:
                 t += 1
 
                 if done:
-                    env.render()
+                    if reward == 1:
+                        success += 1
+                    elif reward == -1:
+                        loss += 1
+                    #env.render()
                     break
                 if len(self.memory) > batch_size:
                     self.replay(batch_size)
 
             if episode % 10 == 0:
+                print("success: {}".format(success))
+                print("loss: {}".format(loss))
                 self.save('./model_default.ckpt')
 
     def get_current_state(self):
@@ -152,7 +171,7 @@ class DQN:
 if __name__=="__main__":
     n_states = 100
     n_actions = 4
-    agent = DQN(state_size=n_states, action_size=n_actions, total_episodes=11, max_steps=10000)
-    #agent.train()
-    #agent.planPath()
+    agent = DQN(state_size=n_states, action_size=n_actions, total_episodes=101, max_steps=10000)
+    agent.train()
+    agent.planPath()
     #cv2.destroyAllwindows()
